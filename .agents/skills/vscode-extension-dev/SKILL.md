@@ -13,7 +13,7 @@ description: Specialized guidelines and patterns for developing the VS Code / An
 
 ## 2. Directory Layout
 ```
-extension/
+./
 ├── src/
 │   ├── server/             # WebSocket server on localhost (ws package)
 │   │   ├── wss.ts          # Server instance & connection manager

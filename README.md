@@ -38,9 +38,6 @@ When you run complex, multi-step agent prompts in **Google Antigravity** or **Gi
 
 ### 1. Installation & Build
 ```bash
-# Navigate to extension directory
-cd extension
-
 # Install dependencies
 npm install
 
@@ -49,7 +46,7 @@ npm run compile
 ```
 
 ### 2. Running in Development (Extension Development Host)
-1. Open the `extension` folder in VS Code or Antigravity IDE.
+1. Open this repository in VS Code or Antigravity IDE.
 2. Press <kbd>F5</kbd> to launch a new **Extension Development Host** window.
 3. Open the Command Palette (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> or <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>) and run:
    * `AgentPulse: Start Mobile Companion Server`
@@ -82,7 +79,7 @@ npm run lint
 ## 📁 Repository Structure
 
 ```
-extension/
+./
 ├── src/
 │   ├── server/             # Ephemeral WebSocket daemon & QR generator
 │   │   ├── wss.ts          # Server instance & connection manager
@@ -115,5 +112,5 @@ extension/
 
 * **What it is:** Lightweight VS Code & Antigravity companion extension serving a local WebSocket server and keep-awake engine.
 * **Security:** 100% local, ephemeral 256-bit token auth, zero cloud storage.
-* **Run:** `cd extension && npm install && npm run compile`. Press <kbd>F5</kbd> in VS Code to run. Tests: `npm test`.
+* **Run:** `npm install && npm run compile`. Press <kbd>F5</kbd> in VS Code to run. Tests: `npm test`.
 

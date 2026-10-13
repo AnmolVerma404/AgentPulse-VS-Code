@@ -20,7 +20,7 @@
 ## 2. Directory Layout
 
 ```
-extension/
+./
 ├── .agents/                      # AI Agent Skills & Rules
 │   ├── rules/
 │   │   ├── coding-standards.md   # TypeScript standards
