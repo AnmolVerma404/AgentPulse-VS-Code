@@ -3,6 +3,7 @@ import { TokenManager } from './server/auth';
 import { AgentPulseServer } from './server/wss';
 import { AntigravityAdapter } from './adapters/antigravity';
 import { KeepAwakeManager } from './keepawake';
+import { AgentPulseSidebarProvider } from './server/sidebarView';
 import { ClientAction, NormalizedEvent } from './adapters/types';
 
 let server: AgentPulseServer | null = null;
@@ -10,14 +11,24 @@ let tokenManager: TokenManager | null = null;
 let adapter: AntigravityAdapter | null = null;
 let keepAwake: KeepAwakeManager | null = null;
 let statusBarItem: vscode.StatusBarItem | null = null;
+let sidebarProvider: AgentPulseSidebarProvider | null = null;
 
 export async function activate(context: vscode.ExtensionContext) {
   tokenManager = new TokenManager();
   keepAwake = new KeepAwakeManager();
 
+  // Register Sidebar Control Center Webview Provider
+  sidebarProvider = new AgentPulseSidebarProvider(context.extensionUri);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      AgentPulseSidebarProvider.viewType,
+      sidebarProvider
+    )
+  );
+
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   statusBarItem.text = '$(radio-tower) AgentPulse: Ready';
-  statusBarItem.tooltip = 'Click to show AgentPulse pairing details';
+  statusBarItem.tooltip = 'Click to show AgentPulse Control Center';
   statusBarItem.command = 'agentpulse.showPairingQr';
   statusBarItem.show();
   context.subscriptions.push(statusBarItem);
@@ -32,13 +43,16 @@ export async function activate(context: vscode.ExtensionContext) {
     const port = config.get<number>('port', 49152);
     const autoKeepAwake = config.get<boolean>('autoKeepAwake', true);
 
-    tokenManager!.generateSessionToken();
+    const token = tokenManager!.generateSessionToken();
 
     server = new AgentPulseServer({
       port,
       tokenManager: tokenManager!,
       onClientAction: (action: ClientAction) => {
         handleClientAction(action);
+      },
+      onClientCountChange: (count: number) => {
+        sidebarProvider?.updateState({ connectedClients: count });
       },
     });
 
@@ -52,6 +66,11 @@ export async function activate(context: vscode.ExtensionContext) {
         }
       }
 
+      sidebarProvider?.updateState({
+        agentStatus: event.status,
+        keepAwakeActive: keepAwake?.isActive() ?? false,
+      });
+
       // Broadcast to mobile app
       server?.broadcast(event);
     });
@@ -59,6 +78,16 @@ export async function activate(context: vscode.ExtensionContext) {
     try {
       const boundPort = await server.start();
       adapter.start();
+
+      const connectionUri = `ws://127.0.0.1:${boundPort}?token=${token}`;
+      sidebarProvider?.updateState({
+        isRunning: true,
+        port: boundPort,
+        token,
+        connectionUri,
+        connectedClients: 0,
+        keepAwakeActive: keepAwake?.isActive() ?? false,
+      });
 
       if (statusBarItem) {
         statusBarItem.text = `$(radio-tower) AgentPulse: :${boundPort}`;
@@ -73,8 +102,10 @@ export async function activate(context: vscode.ExtensionContext) {
   };
 
   const showPairingInfo = () => {
+    vscode.commands.executeCommand('agentpulse.controlView.focus');
+
     if (!server || !tokenManager) {
-      vscode.window.showWarningMessage('Please start the AgentPulse server first.');
+      vscode.window.showInformationMessage('Please start the AgentPulse companion server using the sidebar Control Center.');
       return;
     }
 
@@ -108,6 +139,15 @@ export async function activate(context: vscode.ExtensionContext) {
       await server.stop();
       server = null;
     }
+
+    sidebarProvider?.updateState({
+      isRunning: false,
+      token: null,
+      connectionUri: null,
+      connectedClients: 0,
+      keepAwakeActive: false,
+      agentStatus: 'idle',
+    });
 
     if (statusBarItem) {
       statusBarItem.text = '$(radio-tower) AgentPulse: Stopped';
