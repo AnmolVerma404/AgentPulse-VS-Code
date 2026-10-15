@@ -93,6 +93,7 @@ export class AgentPulseSidebarProvider implements vscode.WebviewViewProvider {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: https:; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
   <style>
     body {
       font-family: var(--vscode-font-family);
@@ -231,7 +232,7 @@ export class AgentPulseSidebarProvider implements vscode.WebviewViewProvider {
   </div>
 
   <script>
-    const vscode = acquireVsCodeApi();
+    const vscode = window.vscodeApi || (window.vscodeApi = acquireVsCodeApi());
     function sendMessage(type) {
       vscode.postMessage({ type });
     }
