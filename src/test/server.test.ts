@@ -66,5 +66,33 @@ describe('AgentPulseServer & WebSocket Handshake', () => {
       done();
     });
   });
+
+  it('notifies onClientCountChange when client connects and disconnects', (done) => {
+    const counts: number[] = [];
+
+    let finished = false;
+    const testServer = new AgentPulseServer({
+      port: 0,
+      tokenManager,
+      onClientCountChange: (count) => {
+        counts.push(count);
+        if (!finished && counts.includes(1) && count === 0) {
+          finished = true;
+          testServer.stop().then(() => {
+            expect(counts).toContain(1);
+            expect(counts[counts.length - 1]).toBe(0);
+            done();
+          });
+        }
+      },
+    });
+
+    testServer.start().then((port) => {
+      const testWs = new WebSocket(`ws://127.0.0.1:${port}?token=${validToken}`);
+      testWs.on('open', () => {
+        testWs.close();
+      });
+    });
+  });
 });
 

@@ -15,9 +15,28 @@
   ],
   "main": "./out/extension.js",
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onView:agentpulse.controlView"
   ],
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "agentpulse-explorer",
+          "title": "AgentPulse",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "agentpulse-explorer": [
+        {
+          "type": "webview",
+          "id": "agentpulse.controlView",
+          "name": "Control Center"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "agentpulse.startServer",
@@ -58,6 +77,7 @@
   "devDependencies": {
     "@types/jest": "^29.5.14",
     "@types/node": "^20.17.0",
+    "@types/qrcode": "^1.5.6",
     "@types/vscode": "^1.93.0",
     "@types/ws": "^8.5.14",
     "jest": "^29.7.0",
@@ -69,4 +89,3 @@
     "ws": "^8.18.0"
   }
 }
-

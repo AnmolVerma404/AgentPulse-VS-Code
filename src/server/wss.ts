@@ -7,6 +7,7 @@ export interface ServerOptions {
   port: number;
   tokenManager: TokenManager;
   onClientAction?: (action: ClientAction) => void;
+  onClientCountChange?: (count: number) => void;
 }
 
 export class AgentPulseServer {
@@ -44,6 +45,7 @@ export class AgentPulseServer {
 
         this.wss.on('connection', (ws: WebSocket) => {
           this.clients.add(ws);
+          this.options.onClientCountChange?.(this.clients.size);
 
           ws.on('message', (data: Buffer | string) => {
             try {
@@ -58,10 +60,12 @@ export class AgentPulseServer {
 
           ws.on('close', () => {
             this.clients.delete(ws);
+            this.options.onClientCountChange?.(this.clients.size);
           });
 
           ws.on('error', () => {
             this.clients.delete(ws);
+            this.options.onClientCountChange?.(this.clients.size);
           });
         });
 
@@ -99,11 +103,16 @@ export class AgentPulseServer {
 
   public stop(): Promise<void> {
     return new Promise((resolve) => {
+      if (!this.isRunning) {
+        resolve();
+        return;
+      }
       this.isRunning = false;
       for (const client of this.clients) {
         client.terminate();
       }
       this.clients.clear();
+      this.options.onClientCountChange?.(0);
 
       if (this.wss) {
         this.wss.close();
