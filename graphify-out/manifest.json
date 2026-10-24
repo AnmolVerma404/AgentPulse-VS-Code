@@ -1,0 +1,140 @@
+{
+  "jest.config.js": {
+    "mtime": 1792088226.8387098,
+    "seen": 1792857745.4331334,
+    "ast_hash": "c1b72e071e0b2e14a49e2e24f9bb83fd",
+    "semantic_hash": "c1b72e071e0b2e14a49e2e24f9bb83fd"
+  },
+  "package.json": {
+    "mtime": 1792090570.3650227,
+    "seen": 1792857745.4331374,
+    "ast_hash": "848454b8ff9b47ea9cb4a8fe13fbd34c",
+    "semantic_hash": "848454b8ff9b47ea9cb4a8fe13fbd34c"
+  },
+  "src/adapters/antigravity.ts": {
+    "mtime": 1792088607.503148,
+    "seen": 1792857745.4331388,
+    "ast_hash": "da7d822d1439c2668eba37f8d49915b9",
+    "semantic_hash": "da7d822d1439c2668eba37f8d49915b9"
+  },
+  "src/adapters/types.ts": {
+    "mtime": 1792088607.5295687,
+    "seen": 1792857745.4331398,
+    "ast_hash": "cd87609a8bcc5ada14c4f3cf223ea1bd",
+    "semantic_hash": "cd87609a8bcc5ada14c4f3cf223ea1bd"
+  },
+  "src/extension.ts": {
+    "mtime": 1792090570.387755,
+    "seen": 1792857745.4331405,
+    "ast_hash": "54f0e62fb567ef307408aa93c81a8da3",
+    "semantic_hash": "54f0e62fb567ef307408aa93c81a8da3"
+  },
+  "src/keepawake/index.ts": {
+    "mtime": 1792088607.592815,
+    "seen": 1792857745.4331412,
+    "ast_hash": "7499a7c8c7e388ad7168213818ae1b42",
+    "semantic_hash": "7499a7c8c7e388ad7168213818ae1b42"
+  },
+  "src/server/auth.ts": {
+    "mtime": 1792088607.6492739,
+    "seen": 1792857745.433142,
+    "ast_hash": "fd89757c032cce2f82bd48d0f9968ebe",
+    "semantic_hash": "fd89757c032cce2f82bd48d0f9968ebe"
+  },
+  "src/server/sidebarView.ts": {
+    "mtime": 1792091204.9161134,
+    "seen": 1792857745.433143,
+    "ast_hash": "f06dd5ec28657bacc0eda7396a390b83",
+    "semantic_hash": "f06dd5ec28657bacc0eda7396a390b83"
+  },
+  "src/server/wss.ts": {
+    "mtime": 1792090443.5362296,
+    "seen": 1792857745.4331434,
+    "ast_hash": "3919d2db9384b413c6b388238ff49c46",
+    "semantic_hash": "3919d2db9384b413c6b388238ff49c46"
+  },
+  "src/test/antigravity.test.ts": {
+    "mtime": 1792088607.7227788,
+    "seen": 1792857745.433144,
+    "ast_hash": "b68cd2338f08be82a8f717de556f4fe7",
+    "semantic_hash": "b68cd2338f08be82a8f717de556f4fe7"
+  },
+  "src/test/auth.test.ts": {
+    "mtime": 1792088607.7417836,
+    "seen": 1792857745.4331446,
+    "ast_hash": "2816d3e712bc401dc6c5612aff03466f",
+    "semantic_hash": "2816d3e712bc401dc6c5612aff03466f"
+  },
+  "src/test/extension.test.ts": {
+    "mtime": 1791912423.1417305,
+    "seen": 1792857745.4331453,
+    "ast_hash": "138944b8c8d8fead151cbe4f881d9ec1",
+    "semantic_hash": "138944b8c8d8fead151cbe4f881d9ec1"
+  },
+  "src/test/mockVscode.ts": {
+    "mtime": 1792088226.89799,
+    "seen": 1792857745.433146,
+    "ast_hash": "cb10a57a5a161540c7ab38f1d9729ea6",
+    "semantic_hash": "cb10a57a5a161540c7ab38f1d9729ea6"
+  },
+  "src/test/server.test.ts": {
+    "mtime": 1792090480.4635096,
+    "seen": 1792857745.4331467,
+    "ast_hash": "a2b3f0dde1f91cc851df6fe5e78be69f",
+    "semantic_hash": "a2b3f0dde1f91cc851df6fe5e78be69f"
+  },
+  "src/test/sidebarView.test.ts": {
+    "mtime": 1792090570.4941044,
+    "seen": 1792857745.4331474,
+    "ast_hash": "2690967b55af1966ad58d285c996a37a",
+    "semantic_hash": "2690967b55af1966ad58d285c996a37a"
+  },
+  "tsconfig.json": {
+    "mtime": 1791912423.1757126,
+    "seen": 1792857745.4331481,
+    "ast_hash": "bdeca8b694cfa4078c1f0c739b1b1242",
+    "semantic_hash": "bdeca8b694cfa4078c1f0c739b1b1242"
+  },
+  ".agents/rules/coding-standards.md": {
+    "mtime": 1791913216.5429654,
+    "seen": 1792857745.4331486,
+    "ast_hash": "eb4cbee993d99cc6eb3b094a19a7ac62",
+    "semantic_hash": "eb4cbee993d99cc6eb3b094a19a7ac62"
+  },
+  ".agents/rules/security.md": {
+    "mtime": 1791913216.5609407,
+    "seen": 1792857745.433149,
+    "ast_hash": "69216422ee99c1bc42ccb1380ae06db9",
+    "semantic_hash": "69216422ee99c1bc42ccb1380ae06db9"
+  },
+  ".agents/skills/antigravity-adapter/SKILL.md": {
+    "mtime": 1791913216.589966,
+    "seen": 1792857745.43315,
+    "ast_hash": "a335146ffb41d7772c361a2b91d093d4",
+    "semantic_hash": "a335146ffb41d7772c361a2b91d093d4"
+  },
+  ".agents/skills/vscode-extension-dev/SKILL.md": {
+    "mtime": 1791915515.2193358,
+    "seen": 1792857745.4331505,
+    "ast_hash": "d53f888b1bfcf8b6d51dd13ab3bdcc1a",
+    "semantic_hash": "d53f888b1bfcf8b6d51dd13ab3bdcc1a"
+  },
+  "AGENTS.md": {
+    "mtime": 1791915515.2193358,
+    "seen": 1792857745.433151,
+    "ast_hash": "9cf897bc742a368d60da875164625404",
+    "semantic_hash": "9cf897bc742a368d60da875164625404"
+  },
+  "README.md": {
+    "mtime": 1791915515.2193358,
+    "seen": 1792857745.4331517,
+    "ast_hash": "3694cd144ab2decb8bf873f7d5cee7cb",
+    "semantic_hash": "3694cd144ab2decb8bf873f7d5cee7cb"
+  },
+  "media/icon.svg": {
+    "mtime": 1792090549.6093192,
+    "seen": 1792857745.4331527,
+    "ast_hash": "eb81a9b6ea85fb8ff7d49c5cf0787902",
+    "semantic_hash": "eb81a9b6ea85fb8ff7d49c5cf0787902"
+  }
+}
