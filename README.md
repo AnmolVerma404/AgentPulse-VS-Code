@@ -29,6 +29,17 @@ When you run complex, multi-step agent prompts in **Google Antigravity**, you sh
 
 ---
 
+## 🤖 Supported AI Coding Assistants
+
+| Assistant / Agent | IDE / Host | Support Status | Capabilities |
+| :--- | :--- | :---: | :--- |
+| **Google Antigravity** | Google Antigravity IDE |  **Supported** | Live thought streaming, tool execution indicators, history hydration, and completion alerts |
+| **GitHub Copilot Chat** | VS Code | 🟡 *Planned* | Investigating VS Code Chat API session event listeners |
+| **Cursor Agent** | Cursor | 🟡 *Planned* | Local session and transcript log tailing |
+| **Claude Code** | Terminal / CLI | 🟡 *Planned* | Background terminal daemon observation |
+
+---
+
 ## 📐 Architecture & Connection Flow
 
 ```mermaid
