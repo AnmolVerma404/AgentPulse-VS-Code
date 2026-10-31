@@ -1,13 +1,14 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import * as http from 'http';
 import { TokenManager } from './auth';
-import { NormalizedEvent, ClientAction } from '../adapters/types';
+import { NormalizedEvent } from '../adapters/types';
 
 export interface ServerOptions {
   port: number;
+  host?: string;
   tokenManager: TokenManager;
-  onClientAction?: (action: ClientAction) => void;
   onClientCountChange?: (count: number) => void;
+  getInitialState?: () => NormalizedEvent | null;
 }
 
 export class AgentPulseServer {
@@ -47,16 +48,15 @@ export class AgentPulseServer {
           this.clients.add(ws);
           this.options.onClientCountChange?.(this.clients.size);
 
-          ws.on('message', (data: Buffer | string) => {
-            try {
-              const parsed: ClientAction = JSON.parse(data.toString());
-              if (this.options.onClientAction) {
-                this.options.onClientAction(parsed);
-              }
-            } catch {
-              // Ignore invalid JSON messages
+          // Send initial state / history snapshot upon successful authenticated connection
+          try {
+            const initialState = this.options.getInitialState?.();
+            if (initialState && ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify(initialState));
             }
-          });
+          } catch {
+            // Ignore initial state serialization errors
+          }
 
           ws.on('close', () => {
             this.clients.delete(ws);
@@ -69,7 +69,8 @@ export class AgentPulseServer {
           });
         });
 
-        this.server.listen(this.options.port, '127.0.0.1', () => {
+        const host = this.options.host || '0.0.0.0';
+        this.server.listen(this.options.port, host, () => {
           this.isRunning = true;
           const address = this.server?.address();
           const actualPort = typeof address === 'object' && address ? address.port : this.options.port;

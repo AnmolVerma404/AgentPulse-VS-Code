@@ -1,6 +1,6 @@
 # AgentPulse VS Code Extension (`agentpulse-vscode`)
 
-> VS Code & Antigravity IDE companion extension bridging your desktop AI sessions to your mobile phone while AFK.
+> VS Code & Antigravity IDE companion extension bridging your desktop AI sessions to your mobile phone over local Wi-Fi while AFK.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.93.0-007ACC.svg)](https://code.visualstudio.com/)
@@ -10,13 +10,14 @@
 
 ## ⚡ Overview
 
-When you run complex, multi-step agent prompts in **Google Antigravity** or **GitHub Copilot**, you shouldn't have to stay glued to your desk. **AgentPulse** runs a lightweight local daemon inside your IDE that:
+When you run complex, multi-step agent prompts in **Google Antigravity**, you shouldn't have to stay glued to your desk. **AgentPulse** runs a lightweight local broadcast daemon inside your IDE that:
 
-* **Tails Antigravity Transcripts:** Streams real-time tokens, internal reasoning, and tool calls directly from Antigravity's structured `transcript.jsonl` session logs.
-* **Monitors GitHub Copilot:** Hooks into active chat sessions.
+* **Tails Antigravity Transcripts:** Streams real-time tokens, internal reasoning, and tool calls directly from Antigravity's structured `%USERPROFILE%\.gemini\antigravity\brain\<id>\.system_generated\logs\transcript.jsonl` session logs.
+* **Detects Task Completion:** Emits an instant `done` status event when the agent finishes its response turn.
+* **Instant State Handshake (`INIT_SESSION`):** Automatically sends existing conversation history and current status to newly connected or reconnecting mobile clients so the chat screen populates immediately.
+* **Local LAN Broadcast:** Automatically resolves your workstation's physical Wi-Fi/Ethernet IPv4 address (filtering out WSL/Docker virtual adapters) and generates a local pairing QR code (`ws://192.168.x.x:49152?token=...`).
 * **Prevents Laptop Sleep:** Engages OS-level keep-awake power assertions (Windows `SetThreadExecutionState` / macOS `caffeinate`) while an agent task is active.
-* **Instant QR Code Pairing:** Generates a secure, ephemeral QR code in VS Code to pair your phone in seconds.
-* **Zero Cloud Storage:** Runs 100% locally on your machine with ephemeral 256-bit token authentication. No chats or code are ever sent to an external database.
+* **Zero Cloud Storage & Privacy-First:** Runs 100% locally on your machine with ephemeral 256-bit token authentication (`crypto.randomBytes(32)` + `timingSafeEqual`). No chats or code are ever sent to an external database.
 
 ---
 
@@ -24,8 +25,8 @@ When you run complex, multi-step agent prompts in **Google Antigravity** or **Gi
 
 * **Platform:** VS Code Extension API (^1.93.0) + Antigravity IDE
 * **Language:** TypeScript (Strict ES2022)
-* **WebSocket Server:** `ws` on localhost
-* **Security:** Cryptographic pairing tokens (`crypto.randomBytes(32)` + `timingSafeEqual`)
+* **WebSocket Server:** `ws` bound to `0.0.0.0`
+* **Security:** Cryptographic pairing tokens (`crypto.randomBytes(32)` + constant-time comparison)
 * **Testing:** Jest + `ts-jest`
 
 ---
@@ -38,6 +39,9 @@ When you run complex, multi-step agent prompts in **Google Antigravity** or **Gi
 
 ### 1. Installation & Build
 ```bash
+# Navigate to extension directory
+cd extension
+
 # Install dependencies
 npm install
 
@@ -46,11 +50,11 @@ npm run compile
 ```
 
 ### 2. Running in Development (Extension Development Host)
-1. Open this repository in VS Code or Antigravity IDE.
+1. Open the `extension/` folder in VS Code or Antigravity IDE.
 2. Press <kbd>F5</kbd> to launch a new **Extension Development Host** window.
 3. Open the Command Palette (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> or <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>) and run:
    * `AgentPulse: Start Mobile Companion Server`
-   * `AgentPulse: Show Mobile Pairing QR Code`
+   * `AgentPulse: Show Mobile Pairing QR Code` (or check the AgentPulse sidebar view)
 
 ---
 
@@ -58,8 +62,8 @@ npm run compile
 
 | Command | Title | Description |
 | :--- | :--- | :--- |
-| `agentpulse.startServer` | `AgentPulse: Start Server` | Starts the local WebSocket companion daemon. |
-| `agentpulse.showPairingQr` | `AgentPulse: Show Pairing QR Code` | Displays a pairing QR code in VS Code. |
+| `agentpulse.startServer` | `AgentPulse: Start Server` | Starts the local WebSocket companion daemon on your LAN IP. |
+| `agentpulse.showPairingQr` | `AgentPulse: Show Pairing QR Code` | Displays a pairing QR code and LAN URI in VS Code. |
 | `agentpulse.stopServer` | `AgentPulse: Stop Server` | Shuts down the daemon and releases keep-awake assertions. |
 
 ---
@@ -67,11 +71,11 @@ npm run compile
 ## 🧪 Testing & Quality Assurance
 
 ```bash
-# Run unit tests
+# Run Jest unit test suite
 npm test
 
-# Run linter
-npm run lint
+# Run TypeScript compile check
+npm run compile
 ```
 
 ---
@@ -81,36 +85,29 @@ npm run lint
 ```
 ./
 ├── src/
-│   ├── server/             # Ephemeral WebSocket daemon & QR generator
-│   │   ├── wss.ts          # Server instance & connection manager
+│   ├── server/             # WebSocket daemon & network tools
+│   │   ├── wss.ts          # Server instance & INIT_SESSION handshake
 │   │   ├── auth.ts         # Token generation & constant-time verification
+│   │   ├── network.ts      # Physical LAN IPv4 resolver
+│   │   ├── sidebarView.ts  # Webview sidebar with QR code
 │   │   └── qr.ts           # Terminal & webview QR code generation
 │   ├── adapters/           # AI assistant observers
 │   │   ├── base.ts         # AgentAdapter interface
-│   │   ├── antigravity.ts  # Antigravity transcript.jsonl tailing
-│   │   └── copilot.ts      # GitHub Copilot Chat API listener
+│   │   ├── antigravity.ts  # Antigravity transcript tailing & history loader
+│   │   └── copilot.ts      # GitHub Copilot Chat listener
 │   ├── keepawake/          # Windows & macOS keep-awake engine
 │   ├── extension.ts        # Extension activation and command registration
-│   └── test/               # Jest test suite
+│   └── test/               # Jest test suite (25 tests)
 ├── package.json            # Extension manifest & commands
 ├── tsconfig.json           # TypeScript configuration
 ├── AGENTS.md               # Context cache for AI agents
-└── .vscodeignore           # Packaging ignore list
+└── plan.md                 # Development roadmap and step checklist
 ```
 
 ---
 
 ## 🔒 Security Architecture
 
-* **Localhost Binding:** Binds strictly to `127.0.0.1` by default.
-* **Ephemeral Secret:** Every pairing session creates a 256-bit cryptographic token. Connections without this token are immediately rejected.
-* **No File Access:** The extension provides an event stream and tool approval gateway; it does not offer arbitrary file reading or remote command execution APIs.
-
----
-
-## ⚡ TL;DR
-
-* **What it is:** Lightweight VS Code & Antigravity companion extension serving a local WebSocket server and keep-awake engine.
-* **Security:** 100% local, ephemeral 256-bit token auth, zero cloud storage.
-* **Run:** `npm install && npm run compile`. Press <kbd>F5</kbd> in VS Code to run. Tests: `npm test`.
-
+* **LAN Binding with Ephemeral Secret:** Binds to `0.0.0.0` so mobile devices on the same Wi-Fi router can reach the server. Every pairing session creates an ephemeral 256-bit cryptographic token. Connections without this token are immediately rejected.
+* **Read-Only Broadcast:** The extension does not accept code modification or shell command execution commands from the mobile client. It strictly streams agent status, thoughts, and logs.
+* **Zero External Cloud:** No third-party servers, no relay telemetry, no external databases.

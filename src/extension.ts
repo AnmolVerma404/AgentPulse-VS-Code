@@ -4,7 +4,8 @@ import { AgentPulseServer } from './server/wss';
 import { AntigravityAdapter } from './adapters/antigravity';
 import { KeepAwakeManager } from './keepawake';
 import { AgentPulseSidebarProvider } from './server/sidebarView';
-import { ClientAction, NormalizedEvent } from './adapters/types';
+import { NormalizedEvent } from './adapters/types';
+import { getLanIPv4Address } from './server/network';
 
 let server: AgentPulseServer | null = null;
 let tokenManager: TokenManager | null = null;
@@ -45,17 +46,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const token = tokenManager!.generateSessionToken();
 
-    server = new AgentPulseServer({
-      port,
-      tokenManager: tokenManager!,
-      onClientAction: (action: ClientAction) => {
-        handleClientAction(action);
-      },
-      onClientCountChange: (count: number) => {
-        sidebarProvider?.updateState({ connectedClients: count });
-      },
-    });
-
     adapter = new AntigravityAdapter({}, (event: NormalizedEvent) => {
       // Manage power assertions based on agent state
       if (autoKeepAwake && keepAwake) {
@@ -75,11 +65,31 @@ export async function activate(context: vscode.ExtensionContext) {
       server?.broadcast(event);
     });
 
+    server = new AgentPulseServer({
+      port,
+      tokenManager: tokenManager!,
+      onClientCountChange: (count: number) => {
+        sidebarProvider?.updateState({ connectedClients: count });
+      },
+      getInitialState: () => {
+        if (!adapter) return null;
+        return {
+          event: 'INIT_SESSION',
+          sessionId: adapter.getActiveSessionId(),
+          agentType: 'antigravity',
+          timestamp: Date.now(),
+          status: adapter.getCurrentStatus(),
+          history: adapter.loadRecentHistory(50),
+        };
+      },
+    });
+
     try {
       const boundPort = await server.start();
       adapter.start();
 
-      const connectionUri = `ws://127.0.0.1:${boundPort}?token=${token}`;
+      const lanIp = getLanIPv4Address();
+      const connectionUri = `ws://${lanIp}:${boundPort}?token=${token}`;
       sidebarProvider?.updateState({
         isRunning: true,
         port: boundPort,
@@ -94,7 +104,7 @@ export async function activate(context: vscode.ExtensionContext) {
       }
 
       vscode.window.showInformationMessage(
-        `AgentPulse companion server running on port ${boundPort}. Ready to pair.`
+        `AgentPulse companion server running on ${lanIp}:${boundPort}. Ready to pair.`
       );
     } catch (err: any) {
       vscode.window.showErrorMessage(`Failed to start AgentPulse server: ${err.message}`);
@@ -112,7 +122,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const token = tokenManager.getCurrentToken();
     const config = vscode.workspace.getConfiguration('agentpulse');
     const port = config.get<number>('port', 49152);
-    const connectionUri = `ws://127.0.0.1:${port}?token=${token}`;
+    const lanIp = getLanIPv4Address();
+    const connectionUri = `ws://${lanIp}:${port}?token=${token}`;
 
     vscode.window.showInformationMessage(
       `AgentPulse Connection URI: ${connectionUri}`,
@@ -161,18 +172,6 @@ export async function activate(context: vscode.ExtensionContext) {
   const stopCmd = vscode.commands.registerCommand('agentpulse.stopServer', stopServer);
 
   context.subscriptions.push(startCmd, showQrCmd, stopCmd);
-}
-
-function handleClientAction(action: ClientAction) {
-  if (action.action === 'TOOL_ACTION') {
-    vscode.window.showInformationMessage(
-      `AgentPulse Mobile: User decided to [${action.decision?.toUpperCase()}] tool execution.`
-    );
-  } else if (action.action === 'SEND_PROMPT') {
-    vscode.window.showInformationMessage(
-      `AgentPulse Mobile prompt received: "${action.prompt}"`
-    );
-  }
 }
 
 export async function deactivate() {

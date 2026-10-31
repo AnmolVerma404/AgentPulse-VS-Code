@@ -14,7 +14,7 @@ describe('AgentPulseServer & WebSocket Handshake', () => {
     validToken = tokenManager.generateSessionToken();
 
     server = new AgentPulseServer({
-      port: 0, // OS assigns random available port
+      port: 0,
       tokenManager,
     });
 
@@ -67,6 +67,44 @@ describe('AgentPulseServer & WebSocket Handshake', () => {
     });
   });
 
+  it('sends initial state handshake on client connection when getInitialState is provided', (done) => {
+    const initialEvent: NormalizedEvent = {
+      event: 'INIT_SESSION',
+      sessionId: 'test-session-123',
+      agentType: 'antigravity',
+      status: 'idle',
+      timestamp: Date.now(),
+      history: [
+        {
+          id: 'hist-1',
+          sender: 'user',
+          content: 'Hello initial test',
+          timestamp: Date.now(),
+        },
+      ],
+    };
+
+    const stateServer = new AgentPulseServer({
+      port: 0,
+      tokenManager,
+      getInitialState: () => initialEvent,
+    });
+
+    stateServer.start().then((port) => {
+      const ws = new WebSocket(`ws://127.0.0.1:${port}?token=${validToken}`);
+
+      ws.on('message', (data) => {
+        const parsed = JSON.parse(data.toString());
+        expect(parsed.event).toBe('INIT_SESSION');
+        expect(parsed.sessionId).toBe('test-session-123');
+        expect(parsed.history.length).toBe(1);
+        expect(parsed.history[0].content).toBe('Hello initial test');
+        ws.close();
+        stateServer.stop().then(() => done());
+      });
+    });
+  });
+
   it('notifies onClientCountChange when client connects and disconnects', (done) => {
     const counts: number[] = [];
 
@@ -95,4 +133,3 @@ describe('AgentPulseServer & WebSocket Handshake', () => {
     });
   });
 });
-
