@@ -10,11 +10,28 @@ export interface AntigravityAdapterOptions {
 }
 
 /**
+ * Strips XML wrapping tags from raw Antigravity user input records.
+ */
+export function extractCleanUserRequest(rawContent: string): string {
+  if (!rawContent) return '';
+  const match = rawContent.match(/<USER_REQUEST>([\s\S]*?)<\/USER_REQUEST>/i);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  // Strip additional metadata tags if present
+  return rawContent
+    .replace(/<ADDITIONAL_METADATA>[\s\S]*?<\/ADDITIONAL_METADATA>/gi, '')
+    .replace(/<USER_SETTINGS_CHANGE>[\s\S]*?<\/USER_SETTINGS_CHANGE>/gi, '')
+    .trim();
+}
+
+/**
  * Observes and streams live Google Antigravity session transcripts.
  */
 export class AntigravityAdapter {
   private transcriptPath: string | null = null;
   private currentOffset = 0;
+  private remainderBuffer = '';
   private isWatching = false;
   private watchTimer: NodeJS.Timeout | null = null;
   private activeSessionId: string = 'unknown';
@@ -37,7 +54,8 @@ export class AntigravityAdapter {
   }
 
   /**
-   * Finds the most recently modified conversation directory.
+   * Finds the most recently modified conversation transcript by checking the actual
+   * transcript.jsonl mtimeMs (avoiding Windows directory mtime caching issues).
    */
   public findLatestTranscript(brainPath: string): string | null {
     if (!fs.existsSync(brainPath)) {
@@ -46,32 +64,38 @@ export class AntigravityAdapter {
 
     try {
       const entries = fs.readdirSync(brainPath, { withFileTypes: true });
-      const dirs = entries
-        .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
-        .map((entry) => {
-          const dirPath = path.join(brainPath, entry.name);
-          try {
-            const stats = fs.statSync(dirPath);
-            return { dirPath, name: entry.name, mtimeMs: stats.mtimeMs };
-          } catch {
-            return null;
-          }
-        })
-        .filter((item): item is { dirPath: string; name: string; mtimeMs: number } => item !== null)
-        .sort((a, b) => b.mtimeMs - a.mtimeMs);
+      const candidates: Array<{ transcriptPath: string; sessionId: string; mtimeMs: number }> = [];
 
-      for (const dir of dirs) {
-        const transcript = path.join(dir.dirPath, '.system_generated', 'logs', 'transcript.jsonl');
-        if (fs.existsSync(transcript)) {
-          this.activeSessionId = dir.name;
-          return transcript;
+      for (const entry of entries) {
+        if (!entry.isDirectory() || entry.name.startsWith('.')) {
+          continue;
+        }
+
+        const candidateFile = path.join(brainPath, entry.name, '.system_generated', 'logs', 'transcript.jsonl');
+        try {
+          if (fs.existsSync(candidateFile)) {
+            const stats = fs.statSync(candidateFile);
+            candidates.push({
+              transcriptPath: candidateFile,
+              sessionId: entry.name,
+              mtimeMs: stats.mtimeMs,
+            });
+          }
+        } catch {
+          // Skip inaccessible entries
         }
       }
+
+      if (candidates.length === 0) {
+        return null;
+      }
+
+      candidates.sort((a, b) => b.mtimeMs - a.mtimeMs);
+      this.activeSessionId = candidates[0].sessionId;
+      return candidates[0].transcriptPath;
     } catch {
       return null;
     }
-
-    return null;
   }
 
   /**
@@ -93,6 +117,7 @@ export class AntigravityAdapter {
       }
     }
 
+    this.remainderBuffer = '';
     this.isWatching = true;
     const interval = this.options.pollIntervalMs || 300;
 
@@ -102,7 +127,7 @@ export class AntigravityAdapter {
   }
 
   /**
-   * Polls the transcript file for appended JSONL records.
+   * Polls the transcript file for appended JSONL records with safe line buffering.
    */
   public pollForUpdates(): void {
     if (!this.transcriptPath || !fs.existsSync(this.transcriptPath)) {
@@ -111,6 +136,7 @@ export class AntigravityAdapter {
       if (discovered) {
         this.transcriptPath = discovered;
         this.currentOffset = fs.statSync(this.transcriptPath).size;
+        this.remainderBuffer = '';
       }
       return;
     }
@@ -128,8 +154,11 @@ export class AntigravityAdapter {
       fs.closeSync(fd);
 
       this.currentOffset = stat.size;
-      const rawText = buffer.toString('utf8');
-      const lines = rawText.split('\n');
+      const incomingText = this.remainderBuffer + buffer.toString('utf8');
+      const lines = incomingText.split('\n');
+
+      // The trailing element is incomplete if buffer didn't end with newline
+      this.remainderBuffer = lines.pop() || '';
 
       for (const line of lines) {
         const trimmed = line.trim();
@@ -137,8 +166,8 @@ export class AntigravityAdapter {
           this.parseAndEmitRecord(trimmed);
         }
       }
-    } catch (err) {
-      // Ignore read errors on partially written lines
+    } catch {
+      // Ignore read errors on active file modifications
     }
   }
 
@@ -150,7 +179,37 @@ export class AntigravityAdapter {
       const record = JSON.parse(rawLine);
       const now = Date.now();
 
-      // Emit Thinking delta if available
+      // Skip raw tool stdout outputs (GENERIC) to avoid polluting chat
+      if (record.type === 'GENERIC') {
+        return;
+      }
+
+      // 1. Handle User Request
+      if (record.type === 'USER_INPUT' || record.source === 'USER_EXPLICIT') {
+        const cleanContent = extractCleanUserRequest(record.content || '');
+        if (cleanContent) {
+          this.onEvent({
+            event: 'STREAM_CHUNK',
+            sessionId: this.activeSessionId,
+            agentType: 'antigravity',
+            timestamp: now,
+            type: 'content',
+            sender: 'user',
+            delta: cleanContent,
+          });
+
+          this.onEvent({
+            event: 'AGENT_STATUS',
+            sessionId: this.activeSessionId,
+            agentType: 'antigravity',
+            timestamp: now,
+            status: 'thinking',
+          });
+        }
+        return;
+      }
+
+      // 2. Handle Model Reasoning (Thinking)
       if (record.thinking) {
         this.onEvent({
           event: 'STREAM_CHUNK',
@@ -158,31 +217,30 @@ export class AntigravityAdapter {
           agentType: 'antigravity',
           timestamp: now,
           type: 'thinking',
+          sender: 'agent',
           delta: record.thinking,
         });
-      }
 
-      // Emit Content delta if available
-      if (record.content) {
         this.onEvent({
-          event: 'STREAM_CHUNK',
+          event: 'AGENT_STATUS',
           sessionId: this.activeSessionId,
           agentType: 'antigravity',
           timestamp: now,
-          type: 'content',
-          delta: record.content,
+          status: 'thinking',
         });
       }
 
-      // Emit Tool Calls if present
-      if (Array.isArray(record.tool_calls) && record.tool_calls.length > 0) {
+      // 3. Handle Tool Calls
+      const hasTools = Array.isArray(record.tool_calls) && record.tool_calls.length > 0;
+      if (hasTools) {
         for (let i = 0; i < record.tool_calls.length; i++) {
           const tool = record.tool_calls[i];
+          const requiresApproval = tool.name === 'run_command' || tool.name === 'ask_question';
           const toolPayload: ToolCallPayload = {
             id: `${record.step_index || 0}-${i}`,
             name: tool.name,
-            args: tool.arguments,
-            requiresApproval: tool.name === 'run_command' || tool.name === 'ask_question',
+            args: tool.args || tool.arguments || {},
+            requiresApproval,
           };
 
           this.onEvent({
@@ -193,20 +251,31 @@ export class AntigravityAdapter {
             tool: toolPayload,
           });
 
-          if (toolPayload.requiresApproval) {
-            this.onEvent({
-              event: 'AGENT_STATUS',
-              sessionId: this.activeSessionId,
-              agentType: 'antigravity',
-              timestamp: now,
-              status: 'waiting_approval',
-            });
-          }
+          this.onEvent({
+            event: 'AGENT_STATUS',
+            sessionId: this.activeSessionId,
+            agentType: 'antigravity',
+            timestamp: now,
+            status: requiresApproval ? 'waiting_approval' : 'running_tool',
+          });
         }
       }
 
-      // Status updates
-      if (record.status === 'DONE') {
+      // 4. Handle Assistant Response Content
+      if (record.content) {
+        this.onEvent({
+          event: 'STREAM_CHUNK',
+          sessionId: this.activeSessionId,
+          agentType: 'antigravity',
+          timestamp: now,
+          type: 'content',
+          sender: 'agent',
+          delta: record.content,
+        });
+      }
+
+      // 5. Completion Status Detection
+      if (record.status === 'DONE' && !hasTools) {
         this.onEvent({
           event: 'AGENT_STATUS',
           sessionId: this.activeSessionId,
@@ -244,4 +313,3 @@ export class AntigravityAdapter {
     return this.activeSessionId;
   }
 }
-

@@ -28,14 +28,14 @@
 ---
 
 ### Phase 3: Reliable Antigravity Transcript Observer
-* [ ] **Step 3.1:** Fix `findLatestTranscript()` in [`src/adapters/antigravity.ts`](file:///d:/Code/Personal_Projects/AI_Chat_To_App/extension/src/adapters/antigravity.ts) to compare the modification timestamps (`mtimeMs`) of the actual `transcript.jsonl` files (Windows directory mtime does not propagate up from subfolders).
-* [ ] **Step 3.2:** Implement partial line buffering during file tailing in `pollForUpdates()` so chunk boundaries in JSON lines never cause `JSON.parse` syntax crashes.
-* [ ] **Step 3.3:** Correct transcript schema parsing:
+* [x] **Step 3.1:** Fix `findLatestTranscript()` in [`src/adapters/antigravity.ts`](file:///d:/Code/Personal_Projects/AI_Chat_To_App/extension/src/adapters/antigravity.ts) to compare the modification timestamps (`mtimeMs`) of the actual `transcript.jsonl` files (Windows directory mtime does not propagate up from subfolders).
+* [x] **Step 3.2:** Implement partial line buffering during file tailing in `pollForUpdates()` so chunk boundaries in JSON lines never cause `JSON.parse` syntax crashes.
+* [x] **Step 3.3:** Correct transcript schema parsing:
   - Support `tool.args` (instead of `tool.arguments`).
   - Distinguish user inputs (`USER_EXPLICIT` / `USER_INPUT`) and assistant outputs (`PLANNER_RESPONSE`).
   - Strip raw XML tags (`<USER_REQUEST>`, `<ADDITIONAL_METADATA>`) from user prompts for a clean chat feed.
   - Omit `GENERIC` (raw tool stdout dumps) from the main chat content stream.
-* [ ] **Step 3.4:** Add exact completion detection: when a `PLANNER_RESPONSE` completes with `status: 'DONE'`, emit a high-priority `AGENT_STATUS: 'done'` event.
+* [x] **Step 3.4:** Add exact completion detection: when a `PLANNER_RESPONSE` completes with `status: 'DONE'`, emit a high-priority `AGENT_STATUS: 'done'` event.
 
 ---
 
