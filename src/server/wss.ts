@@ -1,12 +1,11 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import * as http from 'http';
 import { TokenManager } from './auth';
-import { NormalizedEvent, ClientAction } from '../adapters/types';
+import { NormalizedEvent } from '../adapters/types';
 
 export interface ServerOptions {
   port: number;
   tokenManager: TokenManager;
-  onClientAction?: (action: ClientAction) => void;
   onClientCountChange?: (count: number) => void;
 }
 
@@ -46,17 +45,6 @@ export class AgentPulseServer {
         this.wss.on('connection', (ws: WebSocket) => {
           this.clients.add(ws);
           this.options.onClientCountChange?.(this.clients.size);
-
-          ws.on('message', (data: Buffer | string) => {
-            try {
-              const parsed: ClientAction = JSON.parse(data.toString());
-              if (this.options.onClientAction) {
-                this.options.onClientAction(parsed);
-              }
-            } catch {
-              // Ignore invalid JSON messages
-            }
-          });
 
           ws.on('close', () => {
             this.clients.delete(ws);

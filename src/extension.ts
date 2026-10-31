@@ -4,7 +4,7 @@ import { AgentPulseServer } from './server/wss';
 import { AntigravityAdapter } from './adapters/antigravity';
 import { KeepAwakeManager } from './keepawake';
 import { AgentPulseSidebarProvider } from './server/sidebarView';
-import { ClientAction, NormalizedEvent } from './adapters/types';
+import { NormalizedEvent } from './adapters/types';
 
 let server: AgentPulseServer | null = null;
 let tokenManager: TokenManager | null = null;
@@ -48,9 +48,6 @@ export async function activate(context: vscode.ExtensionContext) {
     server = new AgentPulseServer({
       port,
       tokenManager: tokenManager!,
-      onClientAction: (action: ClientAction) => {
-        handleClientAction(action);
-      },
       onClientCountChange: (count: number) => {
         sidebarProvider?.updateState({ connectedClients: count });
       },
@@ -161,18 +158,6 @@ export async function activate(context: vscode.ExtensionContext) {
   const stopCmd = vscode.commands.registerCommand('agentpulse.stopServer', stopServer);
 
   context.subscriptions.push(startCmd, showQrCmd, stopCmd);
-}
-
-function handleClientAction(action: ClientAction) {
-  if (action.action === 'TOOL_ACTION') {
-    vscode.window.showInformationMessage(
-      `AgentPulse Mobile: User decided to [${action.decision?.toUpperCase()}] tool execution.`
-    );
-  } else if (action.action === 'SEND_PROMPT') {
-    vscode.window.showInformationMessage(
-      `AgentPulse Mobile prompt received: "${action.prompt}"`
-    );
-  }
 }
 
 export async function deactivate() {

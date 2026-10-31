@@ -1,5 +1,6 @@
 /**
  * Normalized protocol events between Extension Daemon and Mobile App.
+ * Read-only monitoring protocol.
  */
 
 export type AgentType = 'antigravity' | 'copilot';
@@ -17,26 +18,27 @@ export interface ToolCallPayload {
   name: string;
   args?: Record<string, any>;
   description?: string;
-  requiresApproval: boolean;
+  requiresApproval?: boolean;
+}
+
+export interface ChatMessagePayload {
+  id: string;
+  sender: 'user' | 'agent' | 'system';
+  content: string;
+  thinking?: string;
+  timestamp: number;
 }
 
 export interface NormalizedEvent {
-  event: 'AGENT_STATUS' | 'STREAM_CHUNK' | 'TOOL_CALL' | 'SESSION_START';
+  event: 'AGENT_STATUS' | 'STREAM_CHUNK' | 'TOOL_CALL' | 'SESSION_START' | 'INIT_SESSION';
   sessionId: string;
   agentType: AgentType;
   timestamp: number;
   status?: AgentStatus;
   type?: 'content' | 'thinking';
+  sender?: 'user' | 'agent' | 'system';
   delta?: string;
   tool?: ToolCallPayload;
+  history?: ChatMessagePayload[];
   error?: string;
 }
-
-export interface ClientAction {
-  action: 'TOOL_ACTION' | 'SEND_PROMPT' | 'PING';
-  sessionId?: string;
-  decision?: 'approve' | 'deny';
-  feedback?: string;
-  prompt?: string;
-}
-
