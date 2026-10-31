@@ -29,6 +29,27 @@ When you run complex, multi-step agent prompts in **Google Antigravity**, you sh
 
 ---
 
+## 🎬 Demo & Video Walkthrough
+
+> Watch AgentPulse in action: live thought streaming, display keep-awake, and instant task completion alerts over home Wi-Fi.
+
+<!--
+  PASTE YOUR RECORDED VIDEO OR GIF LINK HERE:
+  
+  Option 1 (GitHub hosted MP4/WebM):
+  <video src="PASTE_YOUR_VIDEO_URL_HERE.mp4" controls="controls" width="100%"></video>
+
+  Option 2 (YouTube / Loom link with thumbnail):
+  [![Watch Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+
+  Option 3 (Animated GIF):
+  ![AgentPulse Demo](./assets/demo.gif)
+-->
+
+*Demo video coming soon — replace this block with your recorded video or GIF link.*
+
+---
+
 ## 🤖 Supported AI Coding Assistants
 
 | Assistant / Agent | IDE / Host | Support Status | Capabilities |
