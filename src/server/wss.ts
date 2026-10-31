@@ -5,6 +5,7 @@ import { NormalizedEvent } from '../adapters/types';
 
 export interface ServerOptions {
   port: number;
+  host?: string;
   tokenManager: TokenManager;
   onClientCountChange?: (count: number) => void;
 }
@@ -57,7 +58,8 @@ export class AgentPulseServer {
           });
         });
 
-        this.server.listen(this.options.port, '127.0.0.1', () => {
+        const host = this.options.host || '0.0.0.0';
+        this.server.listen(this.options.port, host, () => {
           this.isRunning = true;
           const address = this.server?.address();
           const actualPort = typeof address === 'object' && address ? address.port : this.options.port;

@@ -21,9 +21,9 @@
 ---
 
 ### Phase 2: Fix Local Network Binding & QR LAN Address
-* [ ] **Step 2.1:** In [`src/server/wss.ts`](file:///d:/Code/Personal_Projects/AI_Chat_To_App/extension/src/server/wss.ts), change `this.server.listen(port, '127.0.0.1')` to bind to `'0.0.0.0'` (all network interfaces) so devices on the local Wi-Fi can connect.
-* [ ] **Step 2.2:** Add a network utility helper to resolve the machine's primary non-internal IPv4 address (e.g. `192.168.x.x` via `os.networkInterfaces()`).
-* [ ] **Step 2.3:** In [`src/extension.ts`](file:///d:/Code/Personal_Projects/AI_Chat_To_App/extension/src/extension.ts) and [`src/server/sidebarView.ts`](file:///d:/Code/Personal_Projects/AI_Chat_To_App/extension/src/server/sidebarView.ts), update the connection URI and QR code to use the resolved LAN IP instead of hardcoded `127.0.0.1`.
+* [x] **Step 2.1:** In [`src/server/wss.ts`](file:///d:/Code/Personal_Projects/AI_Chat_To_App/extension/src/server/wss.ts), change `this.server.listen(port, '127.0.0.1')` to bind to `'0.0.0.0'` (all network interfaces) so devices on the local Wi-Fi can connect.
+* [x] **Step 2.2:** Add a network utility helper to resolve the machine's primary non-internal IPv4 address (e.g. `192.168.x.x` via `os.networkInterfaces()`).
+* [x] **Step 2.3:** In [`src/extension.ts`](file:///d:/Code/Personal_Projects/AI_Chat_To_App/extension/src/extension.ts) and [`src/server/sidebarView.ts`](file:///d:/Code/Personal_Projects/AI_Chat_To_App/extension/src/server/sidebarView.ts), update the connection URI and QR code to use the resolved LAN IP instead of hardcoded `127.0.0.1`.
 
 ---
 
