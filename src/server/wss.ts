@@ -8,6 +8,7 @@ export interface ServerOptions {
   host?: string;
   tokenManager: TokenManager;
   onClientCountChange?: (count: number) => void;
+  getInitialState?: () => NormalizedEvent | null;
 }
 
 export class AgentPulseServer {
@@ -46,6 +47,16 @@ export class AgentPulseServer {
         this.wss.on('connection', (ws: WebSocket) => {
           this.clients.add(ws);
           this.options.onClientCountChange?.(this.clients.size);
+
+          // Send initial state / history snapshot upon successful authenticated connection
+          try {
+            const initialState = this.options.getInitialState?.();
+            if (initialState && ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify(initialState));
+            }
+          } catch {
+            // Ignore initial state serialization errors
+          }
 
           ws.on('close', () => {
             this.clients.delete(ws);

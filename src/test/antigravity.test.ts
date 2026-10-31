@@ -162,4 +162,67 @@ describe('AntigravityAdapter', () => {
     expect(latest).toBe(newTranscript);
     expect(adapter.getActiveSessionId()).toBe('new-session');
   });
+
+  it('loads recent conversation history cleanly for initial sync', () => {
+    const lines = [
+      JSON.stringify({
+        step_index: 1,
+        source: 'USER_EXPLICIT',
+        type: 'USER_INPUT',
+        content: '<USER_REQUEST>\nImplement login\n</USER_REQUEST>',
+      }),
+      JSON.stringify({
+        step_index: 2,
+        source: 'MODEL',
+        type: 'PLANNER_RESPONSE',
+        status: 'DONE',
+        thinking: 'Planning login module...',
+        content: 'Login has been implemented.',
+      }),
+    ];
+
+    fs.writeFileSync(transcriptPath, lines.join('\n') + '\n');
+
+    const adapter = new AntigravityAdapter({ transcriptPath }, () => {});
+    const history = adapter.loadRecentHistory();
+
+    expect(history.length).toBe(2);
+    expect(history[0].sender).toBe('user');
+    expect(history[0].content).toBe('Implement login');
+    expect(history[1].sender).toBe('agent');
+    expect(history[1].content).toBe('Login has been implemented.');
+    expect(history[1].thinking).toBe('Planning login module...');
+  });
+
+  it('infers current agent status from the last transcript record', () => {
+    const adapter = new AntigravityAdapter({ transcriptPath }, () => {});
+
+    // Empty file
+    expect(adapter.getCurrentStatus()).toBe('idle');
+
+    // Tool call in progress
+    fs.writeFileSync(
+      transcriptPath,
+      JSON.stringify({
+        step_index: 1,
+        source: 'MODEL',
+        type: 'PLANNER_RESPONSE',
+        tool_calls: [{ name: 'run_command' }],
+      }) + '\n'
+    );
+    expect(adapter.getCurrentStatus()).toBe('waiting_approval');
+
+    // Turn complete
+    fs.appendFileSync(
+      transcriptPath,
+      JSON.stringify({
+        step_index: 2,
+        source: 'MODEL',
+        type: 'PLANNER_RESPONSE',
+        status: 'DONE',
+        content: 'Finished work.',
+      }) + '\n'
+    );
+    expect(adapter.getCurrentStatus()).toBe('done');
+  });
 });

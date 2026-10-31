@@ -46,14 +46,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const token = tokenManager!.generateSessionToken();
 
-    server = new AgentPulseServer({
-      port,
-      tokenManager: tokenManager!,
-      onClientCountChange: (count: number) => {
-        sidebarProvider?.updateState({ connectedClients: count });
-      },
-    });
-
     adapter = new AntigravityAdapter({}, (event: NormalizedEvent) => {
       // Manage power assertions based on agent state
       if (autoKeepAwake && keepAwake) {
@@ -71,6 +63,25 @@ export async function activate(context: vscode.ExtensionContext) {
 
       // Broadcast to mobile app
       server?.broadcast(event);
+    });
+
+    server = new AgentPulseServer({
+      port,
+      tokenManager: tokenManager!,
+      onClientCountChange: (count: number) => {
+        sidebarProvider?.updateState({ connectedClients: count });
+      },
+      getInitialState: () => {
+        if (!adapter) return null;
+        return {
+          event: 'INIT_SESSION',
+          sessionId: adapter.getActiveSessionId(),
+          agentType: 'antigravity',
+          timestamp: Date.now(),
+          status: adapter.getCurrentStatus(),
+          history: adapter.loadRecentHistory(50),
+        };
+      },
     });
 
     try {

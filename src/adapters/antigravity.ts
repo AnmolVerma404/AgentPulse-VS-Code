@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { NormalizedEvent, ToolCallPayload } from './types';
+import { NormalizedEvent, ToolCallPayload, ChatMessagePayload, AgentStatus } from './types';
 
 export interface AntigravityAdapterOptions {
   brainPath?: string;
@@ -95,6 +95,105 @@ export class AntigravityAdapter {
       return candidates[0].transcriptPath;
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * Loads recent message history from the active transcript file for initial sync.
+   */
+  public loadRecentHistory(maxMessages = 50): ChatMessagePayload[] {
+    if (!this.transcriptPath) {
+      const brain = this.options.brainPath || AntigravityAdapter.getDefaultBrainPath();
+      this.transcriptPath = this.findLatestTranscript(brain);
+    }
+
+    if (!this.transcriptPath || !fs.existsSync(this.transcriptPath)) {
+      return [];
+    }
+
+    try {
+      const rawText = fs.readFileSync(this.transcriptPath, 'utf8');
+      const lines = rawText.split('\n');
+      const history: ChatMessagePayload[] = [];
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        try {
+          const record = JSON.parse(trimmed);
+          const timestamp = record.created_at ? new Date(record.created_at).getTime() : Date.now();
+
+          if (record.type === 'USER_INPUT' || record.source === 'USER_EXPLICIT') {
+            const cleanContent = extractCleanUserRequest(record.content || '');
+            if (cleanContent) {
+              history.push({
+                id: `hist-user-${record.step_index ?? history.length + 1}`,
+                sender: 'user',
+                content: cleanContent,
+                timestamp,
+              });
+            }
+          } else if (record.type === 'PLANNER_RESPONSE') {
+            if (record.content || record.thinking) {
+              history.push({
+                id: `hist-agent-${record.step_index ?? history.length + 1}`,
+                sender: 'agent',
+                content: record.content || '',
+                thinking: record.thinking || undefined,
+                timestamp,
+              });
+            }
+          }
+        } catch {
+          // Skip unparseable lines
+        }
+      }
+
+      return history.slice(-maxMessages);
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Returns the current inferred status of the agent based on the last record.
+   */
+  public getCurrentStatus(): AgentStatus {
+    if (!this.transcriptPath) {
+      const brain = this.options.brainPath || AntigravityAdapter.getDefaultBrainPath();
+      this.transcriptPath = this.findLatestTranscript(brain);
+    }
+
+    if (!this.transcriptPath || !fs.existsSync(this.transcriptPath)) {
+      return 'idle';
+    }
+
+    try {
+      const rawText = fs.readFileSync(this.transcriptPath, 'utf8');
+      const lines = rawText.trim().split('\n').filter(Boolean);
+      if (lines.length === 0) return 'idle';
+
+      const lastRecord = JSON.parse(lines[lines.length - 1]);
+      if (lastRecord.status === 'DONE' && (!lastRecord.tool_calls || lastRecord.tool_calls.length === 0)) {
+        return 'done';
+      }
+      if (lastRecord.status === 'ERROR') {
+        return 'error';
+      }
+      if (Array.isArray(lastRecord.tool_calls) && lastRecord.tool_calls.length > 0) {
+        const hasApproval = lastRecord.tool_calls.some(
+          (t: any) => t.name === 'run_command' || t.name === 'ask_question'
+        );
+        return hasApproval ? 'waiting_approval' : 'running_tool';
+      }
+      if (lastRecord.thinking || lastRecord.status === 'RUNNING') {
+        return 'thinking';
+      }
+
+      return 'idle';
+    } catch {
+      return 'idle';
     }
   }
 

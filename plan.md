@@ -40,12 +40,12 @@
 ---
 
 ### Phase 4: Initial State Handshake on Connection
-* [ ] **Step 4.1:** In [`src/adapters/antigravity.ts`](file:///d:/Code/Personal_Projects/AI_Chat_To_App/extension/src/adapters/antigravity.ts), add a method to parse the existing conversation history (recent messages) from the active transcript file.
-* [ ] **Step 4.2:** In [`src/server/wss.ts`](file:///d:/Code/Personal_Projects/AI_Chat_To_App/extension/src/server/wss.ts), when a new client connects, immediately emit an `INIT_SESSION` event containing the current session ID, agent status, and recent message history so the phone doesn't start with a blank screen.
+* [x] **Step 4.1:** In [`src/adapters/antigravity.ts`](file:///d:/Code/Personal_Projects/AI_Chat_To_App/extension/src/adapters/antigravity.ts), add a method to parse the existing conversation history (recent messages) from the active transcript file.
+* [x] **Step 4.2:** In [`src/server/wss.ts`](file:///d:/Code/Personal_Projects/AI_Chat_To_App/extension/src/server/wss.ts), when a new client connects, immediately emit an `INIT_SESSION` event containing the current session ID, agent status, and recent message history so the phone doesn't start with a blank screen.
 
 ---
 
 ### Phase 5: Verification & Tests
-* [ ] **Step 5.1:** Update existing unit tests in `src/test/` to reflect read-only server and parser adjustments.
-* [ ] **Step 5.2:** Test extension compilation (`npm run compile`) and verify `npm test` passes 100%.
+* [x] **Step 5.1:** Update existing unit tests in `src/test/` to reflect read-only server and parser adjustments.
+* [x] **Step 5.2:** Test extension compilation (`npm run compile`) and verify `npm test` passes 100%.
 
