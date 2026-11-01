@@ -8,3 +8,4 @@ tsconfig.json
 graphify-out/**
 plan.md
 jest.config.js
+assets/**

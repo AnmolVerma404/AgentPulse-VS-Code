@@ -167,11 +167,30 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.window.showInformationMessage('AgentPulse server stopped.');
   };
 
+  const copyConnectionUri = () => {
+    if (!server || !tokenManager) {
+      vscode.window.showInformationMessage(
+        'AgentPulse server is not running. Please start the server first.'
+      );
+      return;
+    }
+
+    const token = tokenManager.getCurrentToken();
+    const config = vscode.workspace.getConfiguration('agentpulse');
+    const port = config.get<number>('port', 49152);
+    const lanIp = getLanIPv4Address();
+    const connectionUri = `ws://${lanIp}:${port}?token=${token}`;
+
+    vscode.env.clipboard.writeText(connectionUri);
+    vscode.window.showInformationMessage('AgentPulse connection URI copied to clipboard!');
+  };
+
   const startCmd = vscode.commands.registerCommand('agentpulse.startServer', startServer);
   const showQrCmd = vscode.commands.registerCommand('agentpulse.showPairingQr', showPairingInfo);
+  const copyUriCmd = vscode.commands.registerCommand('agentpulse.copyConnectionUri', copyConnectionUri);
   const stopCmd = vscode.commands.registerCommand('agentpulse.stopServer', stopServer);
 
-  context.subscriptions.push(startCmd, showQrCmd, stopCmd);
+  context.subscriptions.push(startCmd, showQrCmd, copyUriCmd, stopCmd);
 }
 
 export async function deactivate() {

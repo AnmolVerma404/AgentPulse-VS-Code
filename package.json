@@ -47,6 +47,10 @@
         "title": "AgentPulse: Show Mobile Pairing QR Code"
       },
       {
+        "command": "agentpulse.copyConnectionUri",
+        "title": "AgentPulse: Copy Connection URI"
+      },
+      {
         "command": "agentpulse.stopServer",
         "title": "AgentPulse: Stop Server"
       }
