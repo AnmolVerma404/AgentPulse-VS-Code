@@ -33,9 +33,7 @@ When you run complex, multi-step agent prompts in **Google Antigravity**, you sh
 
 > Watch AgentPulse in action: live thought streaming, display keep-awake, and instant task completion alerts over home Wi-Fi.
 
-<video src="./assets/AgentPulse.mov" controls="controls" width="100%"></video>
-
-*(Direct video link: [assets/AgentPulse.mov](./assets/AgentPulse.mov))*
+<video src="https://github.com/AnmolVerma404/AgentPulse-VS-Code/raw/main/assets/AgentPulse.mov" controls="controls" width="100%"></video>
 
 ---
 
