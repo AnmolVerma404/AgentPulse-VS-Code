@@ -33,7 +33,7 @@ When you run complex, multi-step agent prompts in **Google Antigravity**, you sh
 
 > Watch AgentPulse in action: live thought streaming, display keep-awake, and instant task completion alerts over home Wi-Fi.
 
-<video src="https://github.com/AnmolVerma404/AgentPulse-VS-Code/raw/main/assets/AgentPulse.mov" controls="controls" width="100%"></video>
+📹 **Video Walkthrough:** [Watch `AgentPulse.mov`](./assets/AgentPulse.mov)
 
 ---
 
@@ -183,3 +183,10 @@ npm run compile
 * **LAN Binding with Ephemeral Secret:** Binds to `0.0.0.0` so mobile devices on the same Wi-Fi router can reach the server. Every pairing session creates an ephemeral 256-bit cryptographic token. Connections without this token are immediately rejected.
 * **Read-Only Broadcast:** The extension does not accept code modification or shell command execution commands from the mobile client. It strictly streams agent status, thoughts, and logs.
 * **Zero External Cloud:** No third-party servers, no relay telemetry, no external databases.
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
