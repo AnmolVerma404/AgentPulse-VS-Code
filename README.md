@@ -29,12 +29,19 @@ When you run complex, multi-step agent prompts in **Google Antigravity**, you sh
 
 ---
 
-## 📸 Demo
+## 📸 Demo & Screenshots
 
-https://github.com/user-attachments/assets/5505d7f5-c42d-425a-aa9b-5203b8de53ba
+### 1. One-Click Pairing
+Copy the pairing URI from the desktop extension and paste it into the mobile companion:
 
+![Paste URI into mobile app](./assets/demo-paste-uri.png)
 
----
+### 2. Live Thought Stream & Completion Alert
+Monitor agent thoughts and tool calls in real time, with instant completion notifications when the turn finishes:
+
+![Task completed notification](./assets/demo-task-complete.png)
+
+📹 **Full Video Walkthrough:** [Download or Watch `AgentPulse.mov`](./assets/AgentPulse.mov)
 
 ## 🤖 Supported AI Coding Assistants
 
